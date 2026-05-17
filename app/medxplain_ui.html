@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedXplain-Simple — Medical Image Analysis</title>
+    <style>
+        :root {
+            --primary: #2c5282;
+            --primary-light: #3182ce;
+            --primary-dark: #1a365d;
+            --accent: #38a169;
+            --danger: #e53e3e;
+            --warning: #d69e2e;
+            --bg: #f7fafc;
+            --card-bg: #ffffff;
+            --text: #2d3748;
+            --text-light: #718096;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: var(--shadow);
+        }
+        .header h1 { font-size: 1.5rem; font-weight: 700; }
+        .header p { font-size: 0.85rem; opacity: 0.85; margin-top: 0.25rem; }
+        .header-row {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: 1400px; margin: 0 auto;
+        }
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: var(--primary); }
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary);
+            background: #ebf4ff;
+        }
+        .upload-area svg { width: 48px; height: 48px; color: var(--text-light); margin-bottom: 0.5rem; }
+        .upload-area p { color: var(--text-light); font-size: 0.9rem; }
+        .upload-area .hint { font-size: 0.75rem; margin-top: 0.25rem; }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: var(--radius);
+            display: none;
+            margin-top: 1rem;
+        }
+
+        /* Form */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+            color: var(--text);
+        }
+        .form-group textarea, .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: border 0.2s;
+        }
+        .form-group textarea:focus, .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(49,130,206,0.15);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-primary:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+        }
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-accent:hover { background: #2f855a; }
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        .btn-outline:hover { background: #ebf4ff; }
+        .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+        /* Results */
+        .result-section { margin-top: 1rem; }
+        .result-section h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+        .result-text {
+            background: #f7fafc;
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            border-left: 3px solid var(--primary);
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+        .result-list { list-style: none; }
+        .result-list li {
+            padding: 0.4rem 0;
+            padding-left: 1.25rem;
+            position: relative;
+            font-size: 0.85rem;
+        }
+        .result-list li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Heatmap */
+        #heatmapContainer {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        #heatmapImage {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        /* Stats */
+        .stats-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 120px;
+            background: #f7fafc;
+            border-radius: var(--radius);
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Loading */
+        .spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 1rem auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+            display: none;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            display: none;
+        }
+        .alert-error {
+            background: #fff5f5;
+            border: 1px solid #fc8181;
+            color: var(--danger);
+        }
+        .alert-success {
+            background: #f0fff4;
+            border: 1px solid #68d391;
+            color: var(--accent);
+        }
+
+        /* Disclaimer */
+        .disclaimer {
+            max-width: 1400px;
+            margin: 0 auto 1rem;
+            padding: 0 1.5rem;
+        }
+        .disclaimer p {
+            font-size: 0.7rem;
+            color: var(--danger);
+            text-align: center;
+            padding: 0.5rem;
+            background: #fff5f5;
+            border-radius: var(--radius);
+        }
+
+        /* SSIM Results */
+        .ssim-score {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 1rem;
+        }
+        .ssim-high { color: var(--accent); }
+        .ssim-medium { color: var(--warning); }
+        .ssim-low { color: var(--danger); }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="header-row">
+        <div>
+            <h1>🏥 MedXplain-Simple</h1>
+            <p>AI-Assisted Medical Image Analysis with Explainable AI</p>
+        </div>
+        <span class="badge" id="statusBadge">● Loading...</span>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div style="max-width:1400px;margin:1rem auto 0;padding:0 1.5rem;">
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('analyze')">🔬 Analyse</button>
+        <button class="tab" onclick="switchTab('compare')">📊 Compare</button>
+        <button class="tab" onclick="switchTab('report')">📄 Report</button>
+    </div>
+</div>
+
+<!-- ANALYZE TAB -->
+<div class="tab-content active" id="tab-analyze">
+    <div class="container">
+        <!-- Left: Input -->
+        <div class="card">
+            <div class="card-title">Medical Image Input</div>
+
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 16V4m0 0L8 8m4-4l4 4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+                </svg>
+                <p>Click or drag to upload a medical image</p>
+                <p class="hint">Supports JPEG, PNG, DICOM (.dcm)</p>
+            </div>
+            <input type="file" id="imageInput" accept="image/*,.dcm" style="display:none">
+            <img id="imagePreview" alt="Preview">
+
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="questionInput">Clinical Question</label>
+                <textarea id="questionInput" placeholder="e.g. Are there any abnormal findings in this chest X-ray?"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="heatmapToggle" checked>
+                    Generate Grad-CAM heatmap
+                </label>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeImage()" disabled>
+                    🔬 Analyse Image
+                </button>
+            </div>
+
+            <div class="alert alert-error" id="analyzeError"></div>
+            <div class="spinner" id="analyzeSpinner"></div>
+            <div class="loading-text" id="analyzeLoading">Analysing image... This may take a few seconds.</div>
+        </div>
+
+        <!-- Right: Results -->
+        <div class="card">
+            <div class="card-title">Analysis Results</div>
+            <div id="resultsPlaceholder" style="text-align:center;padding:3rem;color:var(--text-light);">
+                <p>Upload an image and ask a question to see results.</p>
+            </div>
+            <div id="resultsContent" style="display:none;">
+                <div class="stats-row" id="statsRow">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statConfidence">—</div>
+                        <div class="stat-label">Confidence</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTime">—</div>
+                        <div class="stat-label">Time (ms)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statCoverage">—</div>
+                        <div class="stat-label">Heatmap Coverage</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statModel">—</div>
+                        <div class="stat-label">Model</div>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <h3>VQA Answer</h3>
+                    <div class="result-text" id="resultAnswer"></div>
+                </div>
+
+                <div class="result-section">
+                    <h3>Clinical Reasoning</h3>
+                    <div class="result-text" id="resultReasoning"></div>
+                </div>
+
+                <div class="result-section" id="diffDxSection" style="display:none;">
+                    <h3>Differential Diagnosis</h3>
+                    <ul class="result-list" id="resultDiffDx"></ul>
+                </div>
+
+                <div class="result-section" id="recsSection" style="display:none;">
+                    <h3>Recommendations</h3>
+                    <ul class="result-list" id="resultRecs"></ul>
+                </div>
+
+                <div id="heatmapContainer" style="display:none;">
+                    <h3 style="font-size:0.9rem;font-weight:700;color:var(--primary-dark);margin-bottom:0.5rem;">
+                        Grad-CAM Heatmap
+                    </h3>
+                    <img id="heatmapImage" alt="Grad-CAM Heatmap">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- COMPARE TAB -->
+<div class="tab-content" id="tab-compare">
+    <div class="container">
+        <div class="card">
+            <div class="card-title">Longitudinal Comparison (SSIM)</div>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">
+                Upload a baseline and follow-up scan to detect structural changes.
+            </p>
+            <div class="form-group">
+                <label>Baseline Scan (Earlier)</label>
+                <input type="file" id="baselineInput" accept="image/*,.dcm">
+            </div>
+            <div class="form-group">
+                <label>Follow-up Scan (Later)</label>
+                <input type="file" id="followupInput" accept="image/*,.dcm">
+            </div>
+            <button class="btn btn-primary" id="compareBtn" onclick="compareImages()">
+                📊 Compare Scans
+            </button>
+            <div class="alert alert-error" id="compareError"></div>
+            <div class="spinner" id="compareSpinner"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Comparison Results</div>
+            <div id="comparePlaceholder" style="text-align:center;padding:3rem;color:var(--text-light);">
+                <p>Upload two scans to compare them.</p>
+            </div>
+            <div id="compareResults" style="display:none;">
+                <div class="ssim-score" id="ssimScore"></div>
+                <div class="result-text" id="compareSummary"></div>
+                <div id="compareOverlay" style="text-align:center;margin-top:1rem;">
+                    <img id="compareImage" style="max-width:100%;max-height:350px;border-radius:var(--radius);" alt="Comparison">
+                </div>
+                <div class="result-section" id="changedRegions" style="display:none;">
+                    <h3>Changed Regions</h3>
+                    <ul class="result-list" id="regionsList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- REPORT TAB -->
+<div class="tab-content" id="tab-report">
+    <div class="container">
+        <div class="card" style="grid-column:1/-1;">
+            <div class="card-title">Generate Clinical PDF Report</div>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">
+                Upload an image and provide details to generate a downloadable clinical report.
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group">
+                    <label>Medical Image</label>
+                    <input type="file" id="reportImageInput" accept="image/*,.dcm">
+                </div>
+                <div class="form-group">
+                    <label>Clinical Question</label>
+                    <input type="text" id="reportQuestion" placeholder="What findings are present?">
+                </div>
+                <div class="form-group">
+                    <label>Patient ID</label>
+                    <input type="text" id="reportPatientId" value="ANONYMOUS" placeholder="Patient identifier">
+                </div>
+                <div class="form-group">
+                    <label>Imaging Modality</label>
+                    <select id="reportModality">
+                        <option value="">Select modality</option>
+                        <option value="X-Ray">X-Ray</option>
+                        <option value="CT">CT</option>
+                        <option value="MRI">MRI</option>
+                        <option value="Ultrasound">Ultrasound</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Body Part</label>
+                    <input type="text" id="reportBodyPart" placeholder="e.g. Chest, Brain, Knee">
+                </div>
+            </div>
+            <div class="btn-row" style="margin-top:1rem;">
+                <button class="btn btn-accent" onclick="generateReport()">📄 Generate PDF Report</button>
+            </div>
+            <div class="alert alert-error" id="reportError"></div>
+            <div class="alert alert-success" id="reportSuccess">Report generated! Download should start automatically.</div>
+            <div class="spinner" id="reportSpinner"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Disclaimer -->
+<div class="disclaimer">
+    <p>
+        ⚠️ DISCLAIMER: MedXplain-Simple is a research prototype. It is NOT intended for
+        clinical decision-making without proper validation by a qualified medical professional.
+        All AI-generated findings require clinical correlation.
+    </p>
+</div>
+
+<script>
+    const API_BASE = window.location.origin;
+
+    // --- Tab switching ---
+    function switchTab(name) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('tab-' + name).classList.add('active');
+    }
+
+    // --- Health check ---
+    async function checkHealth() {
+        try {
+            const res = await fetch(API_BASE + '/health');
+            const data = await res.json();
+            const badge = document.getElementById('statusBadge');
+            if (data.status === 'healthy') {
+                badge.textContent = data.demo_mode ? '● Demo Mode' : '● Connected';
+                badge.style.background = 'rgba(56,161,105,0.3)';
+            }
+        } catch {
+            document.getElementById('statusBadge').textContent = '● Offline';
+            document.getElementById('statusBadge').style.background = 'rgba(229,62,62,0.3)';
+        }
+    }
+    checkHealth();
+
+    // --- Image upload ---
+    const uploadArea = document.getElementById('uploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    let selectedFile = null;
+
+    uploadArea.addEventListener('dragover', e => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            imageInput.files = e.dataTransfer.files;
+            handleImageSelect(e.dataTransfer.files[0]);
+        }
+    });
+
+    imageInput.addEventListener('change', () => {
+        if (imageInput.files.length) handleImageSelect(imageInput.files[0]);
+    });
+
+    function handleImageSelect(file) {
+        selectedFile = file;
+        document.getElementById('analyzeBtn').disabled = false;
+
+        if (!file.name.toLowerCase().endsWith('.dcm')) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            imagePreview.style.display = 'none';
+        }
+        uploadArea.innerHTML = '<p style="color:var(--accent);font-weight:600;">✓ ' + file.name + '</p>';
+    }
+
+    // --- Analyse ---
+    async function analyzeImage() {
+        if (!selectedFile) return;
+
+        const question = document.getElementById('questionInput').value.trim();
+        if (!question) {
+            showAlert('analyzeError', 'Please enter a clinical question.');
+            return;
+        }
+
+        hideAlert('analyzeError');
+        showLoading('analyze', true);
+        document.getElementById('resultsPlaceholder').style.display = 'none';
+        document.getElementById('resultsContent').style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        formData.append('question', question);
+        formData.append('generate_heatmap', document.getElementById('heatmapToggle').checked);
+
+        try {
+            const res = await fetch(API_BASE + '/analyze', { method: 'POST', body: formData });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Analysis failed');
+            }
+            const data = await res.json();
+            displayResults(data);
+        } catch (err) {
+            showAlert('analyzeError', 'Error: ' + err.message);
+        } finally {
+            showLoading('analyze', false);
+        }
+    }
+
+    function displayResults(data) {
+        document.getElementById('resultsContent').style.display = 'block';
+
+        document.getElementById('statConfidence').textContent = (data.confidence * 100).toFixed(0) + '%';
+        document.getElementById('statTime').textContent = data.processing_time_ms.toFixed(0);
+        document.getElementById('statCoverage').textContent = (data.heatmap_coverage * 100).toFixed(0) + '%';
+        document.getElementById('statModel').textContent = data.model_used.length > 15
+            ? data.model_used.substring(0, 15) + '…' : data.model_used;
+
+        document.getElementById('resultAnswer').textContent = data.vqa_answer;
+        document.getElementById('resultReasoning').textContent = data.clinical_reasoning || 'N/A';
+
+        const diffDxSection = document.getElementById('diffDxSection');
+        const diffDxList = document.getElementById('resultDiffDx');
+        if (data.differential_diagnosis && data.differential_diagnosis.length) {
+            diffDxSection.style.display = 'block';
+            diffDxList.innerHTML = data.differential_diagnosis.map(d => '<li>' + d + '</li>').join('');
+        } else {
+            diffDxSection.style.display = 'none';
+        }
+
+        const recsSection = document.getElementById('recsSection');
+        const recsList = document.getElementById('resultRecs');
+        if (data.recommendations && data.recommendations.length) {
+            recsSection.style.display = 'block';
+            recsList.innerHTML = data.recommendations.map(r => '<li>' + r + '</li>').join('');
+        } else {
+            recsSection.style.display = 'none';
+        }
+
+        const heatmapContainer = document.getElementById('heatmapContainer');
+        if (data.heatmap_base64) {
+            heatmapContainer.style.display = 'block';
+            document.getElementById('heatmapImage').src = 'data:image/png;base64,' + data.heatmap_base64;
+        } else {
+            heatmapContainer.style.display = 'none';
+        }
+    }
+
+    // --- Compare ---
+    async function compareImages() {
+        const baseFile = document.getElementById('baselineInput').files[0];
+        const followFile = document.getElementById('followupInput').files[0];
+        if (!baseFile || !followFile) {
+            showAlert('compareError', 'Please upload both baseline and follow-up images.');
+            return;
+        }
+
+        hideAlert('compareError');
+        showLoading('compare', true);
+        document.getElementById('comparePlaceholder').style.display = 'none';
+        document.getElementById('compareResults').style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('image_baseline', baseFile);
+        formData.append('image_followup', followFile);
+
+        try {
+            const res = await fetch(API_BASE + '/compare', { method: 'POST', body: formData });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Comparison failed');
+            }
+            const data = await res.json();
+            displayCompare(data);
+        } catch (err) {
+            showAlert('compareError', 'Error: ' + err.message);
+        } finally {
+            showLoading('compare', false);
+        }
+    }
+
+    function displayCompare(data) {
+        document.getElementById('compareResults').style.display = 'block';
+
+        const scoreEl = document.getElementById('ssimScore');
+        scoreEl.textContent = 'SSIM: ' + data.ssim_score.toFixed(4);
+        scoreEl.className = 'ssim-score ' + (
+            data.ssim_score > 0.9 ? 'ssim-high' :
+            data.ssim_score > 0.7 ? 'ssim-medium' : 'ssim-low'
+        );
+
+        document.getElementById('compareSummary').textContent = data.summary;
+
+        if (data.overlay_base64) {
+            document.getElementById('compareImage').src = 'data:image/png;base64,' + data.overlay_base64;
+            document.getElementById('compareOverlay').style.display = 'block';
+        }
+
+        const regionsSection = document.getElementById('changedRegions');
+        const regionsList = document.getElementById('regionsList');
+        if (data.changed_regions && data.changed_regions.length) {
+            regionsSection.style.display = 'block';
+            regionsList.innerHTML = data.changed_regions.map(r =>
+                '<li>Region ' + r.id + ': ' + r.severity + ' change (diff=' +
+                r.mean_difference.toFixed(3) + ', area=' + r.area_pixels + 'px)</li>'
+            ).join('');
+        }
+    }
+
+    // --- Report ---
+    async function generateReport() {
+        const file = document.getElementById('reportImageInput').files[0];
+        const question = document.getElementById('reportQuestion').value.trim();
+        if (!file || !question) {
+            showAlert('reportError', 'Please upload an image and enter a clinical question.');
+            return;
+        }
+
+        hideAlert('reportError');
+        hideAlert('reportSuccess');
+        showLoading('report', true);
+
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('question', question);
+        formData.append('patient_id', document.getElementById('reportPatientId').value);
+        formData.append('modality', document.getElementById('reportModality').value);
+        formData.append('body_part', document.getElementById('reportBodyPart').value);
+
+        try {
+            const res = await fetch(API_BASE + '/report', { method: 'POST', body: formData });
+            if (!res.ok) throw new Error('Report generation failed');
+
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'MedXplain_Report.pdf';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showAlert('reportSuccess', 'Report generated! Download should start automatically.');
+            document.getElementById('reportSuccess').style.display = 'block';
+        } catch (err) {
+            showAlert('reportError', 'Error: ' + err.message);
+        } finally {
+            showLoading('report', false);
+        }
+    }
+
+    // --- Helpers ---
+    function showAlert(id, message) {
+        const el = document.getElementById(id);
+        el.textContent = message;
+        el.style.display = 'block';
+    }
+    function hideAlert(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+    function showLoading(prefix, show) {
+        document.getElementById(prefix + 'Spinner').style.display = show ? 'block' : 'none';
+        const loadingEl = document.getElementById(prefix + 'Loading');
+        if (loadingEl) loadingEl.style.display = show ? 'block' : 'none';
+    }
+</script>
+</body>
+</html>
