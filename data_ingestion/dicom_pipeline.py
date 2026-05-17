@@ -82,13 +82,17 @@ class DICOMPipeline:
         if hasattr(ds, "PixelSpacing") and ds.PixelSpacing:
             pixel_spacing = (float(ds.PixelSpacing[0]), float(ds.PixelSpacing[1]))
 
-        wc = float(ds.WindowCenter) if hasattr(ds, "WindowCenter") and ds.WindowCenter else None
-        ww = float(ds.WindowWidth) if hasattr(ds, "WindowWidth") and ds.WindowWidth else None
+        wc = getattr(ds, "WindowCenter", None)
+        ww = getattr(ds, "WindowWidth", None)
 
-        if isinstance(wc, (list, type(None))):
+        if isinstance(wc, (list,)):
             wc = float(wc[0]) if wc else None
-        if isinstance(ww, (list, type(None))):
+        elif wc is not None:
+            wc = float(wc)
+        if isinstance(ww, (list,)):
             ww = float(ww[0]) if ww else None
+        elif ww is not None:
+            ww = float(ww)
 
         return DICOMMetadata(
             patient_id=safe_get("PatientID", "UNKNOWN"),

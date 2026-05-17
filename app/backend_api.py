@@ -203,14 +203,15 @@ async def generate_report(
     generator = PDFReportGenerator()
     pdf_bytes = generator.generate(report_data)
 
-    report_path = REPORTS_DIR / f"report_{patient_id}_{int(time.time())}.pdf"
+    safe_patient_id = "".join(c for c in patient_id if c.isalnum() or c in ("_", "-"))
+    report_path = REPORTS_DIR / f"report_{safe_patient_id}_{int(time.time())}.pdf"
     report_path.write_bytes(pdf_bytes)
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f"attachment; filename=MedXplain_Report_{patient_id}.pdf"
+            "Content-Disposition": f"attachment; filename=MedXplain_Report_{safe_patient_id}.pdf"
         },
     )
 
@@ -256,7 +257,12 @@ def _read_dicom_bytes(data: bytes) -> Image.Image:
     with tempfile.NamedTemporaryFile(suffix=".dcm", delete=False) as f:
         f.write(data)
         f.flush()
+        tmp_path = f.name
+
+    try:
         pipeline = DICOMPipeline()
-        image, _ = pipeline.read(f.name)
+        image, _ = pipeline.read(tmp_path)
+    finally:
+        os.unlink(tmp_path)
 
     return image

@@ -159,7 +159,7 @@ def main() -> None:
         gradient_accumulation_steps=config.get("grad_accum", 8),
         fp16=torch.cuda.is_available(),
         phase=config.get("phase", 1),
-        use_lora=(config.get("phase", 1) == 2),
+        use_lora=False,  # Already applied in setup_model for phase 2
         lora_r=config.get("lora_r", 16),
         lora_alpha=config.get("lora_alpha", 32),
         seed=config.get("seed", 42),
