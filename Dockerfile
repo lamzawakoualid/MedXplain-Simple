@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-LABEL maintainer="Yasser Daoud <yasser.daoud@edu.uiz.ac.ma>"
+LABEL maintainer="OUALID LAMZAWAK <oualid.lamzawak@edu.uiz.ac.ma>"
 LABEL description="MedXplain-Simple — Medical VQA with Explainable AI"
 LABEL version="2.0.0"
 

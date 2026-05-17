@@ -201,7 +201,7 @@ python -m training.train_medra \
 
 ## Author
 
-**Yasser Daoud** — Master's in AI and Data Analytics, University Ibn Zohr  
+**OUALID LAMZAWAK** — Master's in AI and Data Analytics, University Ibn Zohr  
 Supervised by **Prof. Yassine Oukdach**
 
 ## License
