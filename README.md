@@ -201,8 +201,7 @@ python -m training.train_medra \
 
 ## Author
 
-**OUALID LAMZAWAK** — Master's in AI and Data Analytics, University Ibn Zohr  
-Supervised by **Prof. Yassine Oukdach**
+**OUALID LAMZAWAK** — Master's in AI and Data Analytics, University Ibn Zohr
 
 ## License
 
