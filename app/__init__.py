@@ -1,0 +1,1 @@
+"""MedXplain-Simple — Application package."""

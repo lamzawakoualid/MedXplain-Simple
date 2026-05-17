@@ -1,0 +1,55 @@
+# MedXplain-Simple — Core Dependencies
+# ======================================
+
+# Deep Learning Framework
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Hugging Face Ecosystem
+transformers>=4.36.0
+peft>=0.6.0
+accelerate>=0.25.0
+datasets>=2.14.0
+
+# Vision Backbones
+timm>=0.9.0
+
+# Explainability
+grad-cam>=1.4.0
+
+# Medical Imaging
+pydicom>=2.4.0
+Pillow>=10.0.0
+numpy>=1.24.0
+scikit-image>=0.21.0
+
+# Backend API
+fastapi>=0.104.0
+uvicorn[standard]>=0.23.0
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
+
+# PDF Reports
+reportlab>=4.0.0
+
+# Data Processing
+pandas>=2.0.0
+
+# NLP Metrics
+sacrebleu>=2.3.0
+nltk>=3.8.0
+rouge-score>=0.1.2
+bert-score>=0.3.13
+
+# Experiment Tracking
+tensorboard>=2.14.0
+
+# Google Gemini API
+google-generativeai>=0.3.0
+
+# Utilities
+tqdm>=4.66.0
+pyyaml>=6.0.0
+scipy>=1.11.0
+matplotlib>=3.7.0
+aiofiles>=23.0.0

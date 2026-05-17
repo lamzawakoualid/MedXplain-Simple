@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  medxplain-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medxplain-simple
+    ports:
+      - "8000:8000"
+    environment:
+      - MEDXPLAIN_DEMO_MODE=${MEDXPLAIN_DEMO_MODE:-true}
+      - MEDXPLAIN_DEVICE=${MEDXPLAIN_DEVICE:-cpu}
+      - MEDXPLAIN_ENABLE_MEDRA=${MEDXPLAIN_ENABLE_MEDRA:-true}
+      - MEDXPLAIN_ENABLE_GRADCAM=${MEDXPLAIN_ENABLE_GRADCAM:-true}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - BLIP2_CHECKPOINT=${BLIP2_CHECKPOINT:-}
+      - MEDRA_CHECKPOINT=${MEDRA_CHECKPOINT:-}
+    volumes:
+      - ./medxplain_db:/app/medxplain_db
+      - ./checkpoints:/app/checkpoints
+      - model-cache:/root/.cache/huggingface
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+volumes:
+  model-cache:
+    driver: local

@@ -1,0 +1,176 @@
+# MedXplain-Simple — Configuration
+# ==================================
+
+project:
+  name: MedXplain-Simple
+  version: "2.0.0"
+  description: "Multimodal Vision-Language Model for Medical Visual Question Answering"
+
+# Model Configuration
+models:
+  blip2:
+    model_id: "Salesforce/blip2-opt-2.7b"
+    max_answer_length: 256
+    temperature: 0.7
+    top_p: 0.9
+    image_size: 224
+    use_lora: true
+    lora:
+      r: 16
+      alpha: 32
+      dropout: 0.05
+      target_modules: ["q_proj", "v_proj", "k_proj", "out_proj"]
+
+  medra:
+    model_id: "Henrychur/Medra-4B"
+    max_new_tokens: 512
+    temperature: 0.7
+    top_p: 0.9
+    use_quantisation: true
+    quantisation:
+      load_in_4bit: true
+      compute_dtype: "float16"
+      quant_type: "nf4"
+      double_quant: true
+    lora:
+      r: 16
+      alpha: 32
+      dropout: 0.05
+      target_modules: ["q_proj", "v_proj", "k_proj", "o_proj"]
+
+  visual_encoders:
+    densenet:
+      model_name: "densenet121"
+      num_classes: 14
+      pretrained: true
+    resnet:
+      model_name: "resnet50"
+      num_classes: 14
+      pretrained: true
+    vit:
+      model_name: "vit_base_patch16_224"
+      num_classes: 14
+      pretrained: true
+    swin:
+      model_name: "swin_tiny_patch4_window7_224"
+      num_classes: 14
+      pretrained: true
+
+# Training Configuration
+training:
+  phase1:
+    description: "Vision-language alignment"
+    epochs: 5
+    learning_rate: 1.0e-4
+    batch_size: 4
+    gradient_accumulation_steps: 8
+    warmup_steps: 500
+    max_grad_norm: 1.0
+    fp16: true
+    freeze_llm: true
+
+  phase2:
+    description: "VQA task fine-tuning with LoRA"
+    epochs: 10
+    learning_rate: 2.0e-5
+    batch_size: 4
+    gradient_accumulation_steps: 8
+    warmup_steps: 200
+    max_grad_norm: 1.0
+    fp16: true
+    use_lora: true
+
+  medra:
+    epochs: 3
+    learning_rate: 1.0e-4
+    batch_size: 2
+    gradient_accumulation_steps: 16
+    max_length: 1024
+
+# Dataset Configuration
+dataset:
+  target_size: [15000, 40000]
+  image_size: 224
+  max_question_length: 128
+  max_answer_length: 64
+  splits:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  modality_distribution:
+    chest: 0.60
+    musculoskeletal: 0.20
+    abdominal: 0.10
+    neurological: 0.10
+  question_categories:
+    abnormality_detection: 0.40
+    localisation: 0.25
+    classification: 0.20
+    reasoning: 0.15
+  sources:
+    - "CheXpert"
+    - "MIMIC-CXR"
+    - "NIH ChestX-ray14"
+    - "RSNA"
+    - "COVID-19"
+    - "MedPix"
+
+# Explainability Configuration
+explainability:
+  grad_cam:
+    alpha: 0.4
+    colormap: "jet"
+    coverage_threshold: 0.3
+    target_coverage: 0.90
+  ssim:
+    target_size: [256, 256]
+    win_size: 7
+    change_threshold: 0.3
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+  cors_origins: ["*"]
+  max_upload_size_mb: 50
+  response_latency_target_ms: 5000
+
+# Evaluation Targets
+evaluation:
+  vqa_accuracy: 0.65
+  bleu_4: 0.25
+  meteor: 0.30
+  cider: 0.50
+  bertscore_f1: 0.75
+  clinical_f1: 0.60
+  grad_cam_coverage: 0.90
+  ssim_accuracy: 0.85
+  response_latency_ms: 5000
+
+# Clinical Feature Categories
+clinical_features:
+  pathology_categories:
+    - "Atelectasis"
+    - "Cardiomegaly"
+    - "Consolidation"
+    - "Edema"
+    - "Effusion"
+    - "Emphysema"
+    - "Fibrosis"
+    - "Hernia"
+    - "Infiltration"
+    - "Mass"
+    - "Nodule"
+    - "Pleural Thickening"
+    - "Pneumonia"
+    - "Pneumothorax"
+    - "No Finding"
+
+  anatomical_regions:
+    - "Chest"
+    - "Abdomen"
+    - "Head/Brain"
+    - "Spine"
+    - "Extremities"
+    - "Pelvis"
